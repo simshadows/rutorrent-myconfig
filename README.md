@@ -1,3 +1,16 @@
+# custom\_rutorrent
+
+This repository is a copy of the original [rutorrent repository](https://github.com/Novik/ruTorrent), with my custom configuration changes.
+
+The preferred way of using this is to have two remotes:
+
+```
+git remote add origin https://github.com/Novik/ruTorrent
+git remote add mycustom_repo git@github.com:simshadows/mycustom_rutorrent.git
+```
+
+Pull `origin` regularly for updates. Push to `mycustom_repo` when backing up the config.
+
 # ruTorrent
 
 ruTorrent is a front-end for the popular Bittorrent client [rtorrent](http://rakshasa.github.io/rtorrent).
