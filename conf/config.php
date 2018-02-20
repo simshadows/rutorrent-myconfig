@@ -19,7 +19,7 @@
 	$schedule_rand = 10;			// rand for schedulers start, +0..X seconds
 
 	$do_diagnostic = true;
-	$log_file = '/tmp/errors.log';		// path to log file (comment or leave blank to disable logging)
+	$log_file = '/mnt/external_drive/rtorrent_data/rutorrent/logs/errors.log';		// path to log file (comment or leave blank to disable logging)
 
 	$saveUploadedTorrents = true;		// Save uploaded torrents to profile/torrents directory or not
 	$overwriteUploadedTorrents = false;     // Overwrite existing uploaded torrents in profile/torrents directory or make unique name
@@ -27,8 +27,10 @@
 	$topDirectory = '/';			// Upper available directory. Absolute path with trail slash.
 	$forbidUserSettings = false;
 
-	$scgi_port = 5000;
-	$scgi_host = "127.0.0.1";
+	// $scgi_port = 5000;
+	// $scgi_host = "127.0.0.1";
+	$scgi_port = 0;
+	$scgi_host = "unix:///home/sys-rtorrent/socket/rtorrent.sock";
 
 	// For web->rtorrent link through unix domain socket 
 	// (scgi_local in rtorrent conf file), change variables 
@@ -52,12 +54,13 @@
 		"localhost",
 	);
 
-	$profilePath = '../share';		// Path to user profiles
+	$profilePath = '/mnt/external_drive/rtorrent_data/rutorrent/';		// Path to user profiles
 	$profileMask = 0777;			// Mask for files and directory creation in user profiles.
 						// Both Webserver and rtorrent users must have read-write access to it.
 						// For example, if Webserver and rtorrent users are in the same group then the value may be 0770.
 
-	$tempDirectory = null;			// Temp directory. Absolute path with trail slash. If null, then autodetect will be used.
+    $tempDirectory = '/mnt/external_drive/rtorrent_data/rutorrent/tmp/';
+    // Temp directory. Absolute path with trail slash. If null, then autodetect will be used.
 
 	$canUseXSendFile = false;		// If true then use X-Sendfile feature if it exist
 
