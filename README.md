@@ -1,4 +1,4 @@
-# custom\_rutorrent
+# simshadows/custom\_rutorrent
 
 This repository is a copy of the original [rutorrent repository](https://github.com/Novik/ruTorrent), with my custom configuration changes.
 
@@ -9,7 +9,45 @@ git remote add origin https://github.com/Novik/ruTorrent
 git remote add mycustom_repo git@github.com:simshadows/mycustom_rutorrent.git
 ```
 
-Pull `origin` regularly for updates. Push to `mycustom_repo` when backing up the config.
+## Branches
+
+`master` is only merged in from `Novik/ruTorrent`.
+
+`mycustom_repo` is my custom configuration.
+
+This explicit separation is done to reduce confusion in maintaining this repo.
+
+## Special files/directories in `mycustom_repo` not present in `master`
+
+`manually_managed/` contains manually managed files that are not part of the rutorrent web application.
+
+`app_data/` contains the web application-specific data (separate from rtorrent). I want to use this and not the existing `share/` directory to make it easier to merge cleanly.
+
+## System Assumptions
+
+* This repository's root directory is: `/usr/share/webapps/rutorrent/`
+* **TODO: Other assumptions such as users and rtorrent data locations**
+
+## Initial Setup
+
+Config files are available in `manually_managed/other_config_files/`. It is intended that these files are (correspondingly) linked from the following files/directories:
+
+```
+/etc/nginx/nginx.conf
+/etc/nginx/scgi_params
+/etc/php/
+/home/sys-rtorrent/.rtorrent.rc
+```
+
+**SECURITY: Make sure these are only writable by root.**
+
+## Maintenance
+
+Pull `origin` regularly for master branch updates.
+
+Fetch, merge if necessary, and push to `mycustom_repo` when backing up the config.
+
+To update rutorrent, merge the desired commit into the `mycustom` branch. **IMPORTANT: Unless absolutely necessary, please only update to stable versions. Release tags are usually stable.**
 
 # ruTorrent
 
