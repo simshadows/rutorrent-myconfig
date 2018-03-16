@@ -2,20 +2,15 @@
 
 This repository is a copy of the original [rutorrent repository](https://github.com/Novik/ruTorrent), with my custom configuration changes.
 
-The preferred way of using this is to have two remotes:
+## Notes-to-self on repo maintenance
+
+It is recommended to have a remote to upstream in order to update rutorrent:
 
 ```
-git remote add origin https://github.com/Novik/ruTorrent
-git remote add mycustom_repo git@github.com:simshadows/mycustom_rutorrent.git
+git remote add upstream https://github.com/Novik/ruTorrent
 ```
 
-## Branches
-
-`master` is only merged in from `Novik/ruTorrent`.
-
-`mycustom_repo` is my custom configuration.
-
-This explicit separation is done to reduce confusion in maintaining this repo.
+I only merge to official releases.
 
 ## Special files/directories in `mycustom_repo` not present in `master`
 
@@ -40,14 +35,6 @@ Config files are available in `manually_managed/other_config_files/`. It is inte
 ```
 
 **SECURITY: Make sure these are only writable by root.**
-
-## Maintenance
-
-Pull `origin` regularly for master branch updates.
-
-Fetch, merge if necessary, and push to `mycustom_repo` when backing up the config.
-
-To update rutorrent, merge the desired commit into the `mycustom` branch. **IMPORTANT: Unless absolutely necessary, please only update to stable versions. Release tags are usually stable.**
 
 # ruTorrent
 
