@@ -4,7 +4,6 @@
 	// Get server variables related to the webapp instance
 	$cfgInstanceDir = realpath($_SERVER['CFG_INSTANCE_DIR']);
 	$cfgXMLRPCMountPoint = $_SERVER['CFG_XMLRPC_MOUNTPOINT'];
-	
 
 	// for snoopy client
 	@define('HTTP_USER_AGENT', 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0', true);

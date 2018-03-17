@@ -12,30 +12,6 @@ git remote add upstream https://github.com/Novik/ruTorrent
 
 I only merge to official releases.
 
-## Special files/directories in `mycustom_repo` not present in `master`
-
-`manually_managed/` contains manually managed files that are not part of the rutorrent web application.
-
-`app_data/` contains the web application-specific data (separate from rtorrent). I want to use this and not the existing `share/` directory to make it easier to merge cleanly.
-
-## System Assumptions
-
-* This repository's root directory is: `/usr/share/webapps/rutorrent/`
-* **TODO: Other assumptions such as users and rtorrent data locations**
-
-## Initial Setup
-
-Config files are available in `manually_managed/other_config_files/`. It is intended that these files are (correspondingly) linked from the following files/directories:
-
-```
-/etc/nginx/nginx.conf
-/etc/nginx/scgi_params
-/etc/php/
-/home/sys-rtorrent/.rtorrent.rc
-```
-
-**SECURITY: Make sure these are only writable by root.**
-
 # ruTorrent
 
 ruTorrent is a front-end for the popular Bittorrent client [rtorrent](http://rakshasa.github.io/rtorrent).

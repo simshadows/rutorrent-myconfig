@@ -19,6 +19,7 @@ elif [[ ! -d $instance_dir ]]; then
     echo "Directory '$instance_dir' does not exist. Please create it and run this script again."
     exit
 fi
+echo "instance_dir is set to '$instance_dir'."
 
 ################
 # System Setup #
@@ -41,8 +42,7 @@ instance_name='public0'
 php_fpm_poold_loc='/etc/php/7.0/fpm/pool.d/'
 nginx_html_loc='/usr/share/nginx/html/'
 
-#rpc_mountpoint="/RPC2-$instance_name"
-rpc_mountpoint="/RPC2"
+rpc_mountpoint="/RPC2-$instance_name"
 rutorrent_url="/rutorrent-$instance_name"
 
 ###################
@@ -50,6 +50,9 @@ rutorrent_url="/rutorrent-$instance_name"
 ###################
 
 ## General
+
+scripts_dir="$instance_dir/instance-scripts/"
+run_sh="$scripts_dir/run.sh"
 
 config_dir="$instance_dir/instance-config/"
 rtorrent_inst_file="$config_dir/rtorrent-instance.rc"
@@ -78,63 +81,223 @@ rutorrent_torrents_dir="$rutorrent_data_dir/torrents/"
 rutorrent_users_dir="$rutorrent_data_dir/users/"
 
 rutorrent_log_dir="$instance_dir/rutorrent-logs/"
-nginx_access_log="$rutorrent_log_dir/nginx.rutorrent.access.log"
-nginx_error_log="$rutorrent_log_dir/nginx.rutorrent.error.log"
-nginx_rpc2_access_log="$rutorrent_log_dir/nginx.rutorrent.rpc2.access.log"
-nginx_rpc2_error_log="$rutorrent_log_dir/nginx.rutorrent.rpc2.error.log"
+
+nginx_log_dir="$instance_dir/nginx-logs/"
+nginx_access_log="$nginx_log_dir/nginx.rutorrent.access.log"
+nginx_error_log="$nginx_log_dir/nginx.rutorrent.error.log"
+nginx_rpc2_access_log="$nginx_log_dir/nginx.rutorrent.rpc2.access.log"
+nginx_rpc2_error_log="$nginx_log_dir/nginx.rutorrent.rpc2.error.log"
 
 #############################
 # Directory Structure Setup #
 #############################
 
-mkdir -p $instance_dir \
-    $config_dir \
-    $sockets_dir \
-    $session_dir \
-    $download_dir \
-    $watch_start_dir \
-    $watch_normal_dir \
-    $rtorrent_log_dir \
-    $rutorrent_data_dir \
+mkdir -p $instance_dir
+
+mkdir -p $scripts_dir
+
+mkdir -p $config_dir
+
+mkdir -p $sockets_dir
+chmod 770 $sockets_dir
+chgrp rtorrent-socket $sockets_dir
+
+mkdir -p $session_dir
+chmod 700 $session_dir
+chown rtorrent $session_dir
+
+mkdir -p $download_dir
+chmod 775 $download_dir
+chown rtorrent $download_dir
+chgrp www-data $download_dir
+
+mkdir -p $watch_start_dir
+# TODO: Loosen permissions?
+
+mkdir -p $watch_normal_dir
+# TODO: Loosen permissions?
+
+mkdir -p $rtorrent_log_dir
+chmod 755 $rtorrent_log_dir
+chown rtorrent $rtorrent_log_dir
+
+mkdir -p $rutorrent_data_dir \
     $rutorrent_settings_dir \
     $rutorrent_tmp_dir \
     $rutorrent_torrents_dir \
-    $rutorrent_users_dir \
-    $rutorrent_log_dir \
+    $rutorrent_users_dir
+chmod -R 6770 $rutorrent_data_dir
+chown -R rutorrent $rutorrent_data_dir
+chgrp -R rtorrent $rutorrent_data_dir
+
+mkdir -p $rutorrent_log_dir
+chmod 755 $rutorrent_log_dir
+chown rutorrent $rutorrent_log_dir
+
+mkdir -p $nginx_log_dir
+chmod 755 $nginx_log_dir
 
 ########################
 # Other Instance Setup #
 ########################
 
-function create_sock_file () {
-    python -c "import socket as s; sock = s.socket(s.AF_UNIX); sock.bind('$1')" || true
-}
-
-create_sock_file $rtorrent_sock
-chmod 0660 $rtorrent_sock
-chown rtorrent $rtorrent_sock
-chgrp rtorrent-socket $rtorrent_sock
-
-create_sock_file $rutorrent_sock
-chmod 0660 $rutorrent_sock
-chown rutorrent $rutorrent_sock
-chgrp www-data $rutorrent_sock
+#function create_sock_file () {
+#    python -c "import socket as s; sock = s.socket(s.AF_UNIX); sock.bind('$1')" || true
+#}
+#
+#rm $rtorrent_sock $rutorrent_sock || true
+#
+#create_sock_file $rtorrent_sock
+#chmod 0660 $rtorrent_sock
+#chown rtorrent $rtorrent_sock
+#chgrp rtorrent-socket $rtorrent_sock
+#
+#create_sock_file $rutorrent_sock
+#chmod 0660 $rutorrent_sock
+#chown rutorrent $rutorrent_sock
+#chgrp www-data $rutorrent_sock
 
 # This file specifies the instance base directory for rtorrent.
 cat <<EOF > $rtorrent_inst_file
+#############################################################################
+# Watch https://github.com/rakshasa/rtorrent/wiki/CONFIG-Template for possible
+# configuration options.
+#############################################################################
+
+###################
+# Instance Layout #
+###################
+
 method.insert = cfg.basedir, private|const|string, (cat, "$instance_dir")
+
+method.insert = cfg.sockdir,       private|const|string, (cat, (cfg.basedir), "instance-sockets/")
+method.insert = cfg.sockfile,      private|const|string, (cat, (cfg.basedir), "rtorrent.sock")
+
+method.insert = cfg.session,       private|const|string, (cat, (cfg.basedir), "rtorrent-session/")
+method.insert = cfg.download,      private|const|string, (cat, (cfg.basedir), "rtorrent-data/")
+method.insert = cfg.watch_start,   private|const|string, (cat, (cfg.basedir), "rtorrent-watch-start/")
+method.insert = cfg.watch_normal,  private|const|string, (cat, (cfg.basedir), "rtorrent-watch-normal/")
+
+method.insert = cfg.logs,          private|const|string, (cat, (cfg.basedir), "rtorrent-logs/")
+method.insert = cfg.logfile,       private|const|string, (cat, (cfg.logs), "rtorrent-", (system.time), ".log")
+method.insert = cfg.execlogfile,   private|const|string, (cat, (cfg.logs), "execute.log")
+method.insert = cfg.xmlrpclogfile, private|const|string, (cat, (cfg.logs), "xmlrpc.log")
+
+method.insert = cfg.pidfile,       private|const|string, (cat, (cfg.session), "rtorrent.pid")
+
+system.cwd.set = (cfg.basedir)
+system.umask.set = 0133
+
+###########
+# Logging #
+###########
+
+print         = (cat, "Logging to ", (cfg.logfile))
+log.open_file = "log", (cfg.logfile)
+
+# Each 'log.add_output' adds to the scope of a named log file.
+# The scope is specified in the format <group>_<level>.
+#    Levels = critical error warn notice info debug
+#    Groups = connection_* dht_* peer_* rpc_* storage_* thread_* tracker_* torrent_*
+# Example:
+#    log.add_output = "tracker_debug", "log"
+
+log.add_output   = "info", "log"
+
+log.execute      = (cfg.execlogfile)
+log.xmlrpc       = (cfg.xmlrpclogfile)
+
+#########################
+# Other Config Commands #
+#########################
+
+session.path.set      = (cfg.session)
+directory.default.set = (cfg.download)
+
+# Write PID file
+execute.nothrow       = bash, -c, (cat, "echo >", (cfg.pidfile), " ", (system.pid))
+
+# Watch directory load scheduling ('.torrent' files are loaded in every 10 seconds.)
+schedule2 = watch_start,  10, 10, ((load.start,  (cat, (cfg.watch_start),  "*.torrent")))
+schedule2 = watch_normal, 11, 10, ((load.normal, (cat, (cfg.watch_normal), "*.torrent")))
+
+# Listening port for incoming peer traffic
+network.port_range.set = 50000-50000
+network.port_random.set = no
+
+# Tracker-less torrent and UDP tracker support
+# (Conservative settings suitable for private trackers.)
+dht.mode.set = disable
+protocol.pex.set = no
+trackers.use_udp.set = no
+
+# Peer settings
+# TODO: These settings are small, which is more suitable for testing my raspberry pi.
+#       Make them bigger when I get better hardware!
+throttle.max_uploads.set        = 60
+throttle.max_uploads.global.set = 60
+
+throttle.min_peers.normal.set   = 1
+throttle.max_peers.normal.set   = 60
+throttle.min_peers.seed.set     = 1
+throttle.max_peers.seed.set     = 60
+trackers.numwant.set            = 20
+
+protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
+
+# Limits for file handle resources, this is optimized for
+# an 'ulimit' of 1024 (a common default). You MUST leave
+# a ceiling of handles reserved for rTorrent's internal needs!
+# TODO: Further optimize later.
+network.http.max_open.set = 50
+network.max_open_files.set = 600
+network.max_open_sockets.set = 300
+
+# Memory resource usage (increase if you have a large number of items loaded,
+# and/or the available resources to spend)
+# TODO: Further optimize later.
+pieces.memory.max.set = 300M
+network.xmlrpc.size_limit.set = 4M
+
+# Other operational settings
+encoding.add = utf8
+network.http.dns_cache_timeout.set = 25
+##network.http.capath.set = "/etc/ssl/certs"
+##network.http.ssl_verify_peer.set = 0
+##network.http.ssl_verify_host.set = 0
+##pieces.hash.on_completion.set = no
+##keys.layout.set = qwerty
+
+##view.sort_current = seeding, greater=d.ratio=
+
+# TODO: What does this do?
+schedule2 = monitor_diskspace, 15, 60, ((close_low_diskspace, 1000M))
+
+# Some additional values and commands
+method.insert = system.startup_time, value|const, (system.time)
+method.insert = d.data_path, simple,\
+    "if=(d.is_multi_file),\
+        (cat, (d.directory), /),\
+        (cat, (d.directory), /, (d.name))"
+method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
+
+# SCGI
+execute.nothrow = rm,$rtorrent_sock
+network.scgi.open_local = $rtorrent_sock
+schedule = socket_chmod,0,0,"execute=chmod,0660,$rtorrent_sock"
+schedule = socket_chgrp,0,0,"execute=chgrp,rtorrent-socket,$rtorrent_sock"
 EOF
 
 # This file specifies the instance base directory for rtorrent.
 cat <<EOF > $nginx_inst_file
 location $rutorrent_url {
-    scgi_param CFG_INSTANCE_DIR $instance_dir;
-    scgi_param CFG_XMLRPC_MOUNTPOINT $rpc_mountpoint;
-
     access_log $nginx_access_log;
-    error_log $nginx_error_log debug;
+    error_log $nginx_error_log info;
 
     location ~ .php$ {
+		fastcgi_param CFG_INSTANCE_DIR "$instance_dir";
+		fastcgi_param CFG_XMLRPC_MOUNTPOINT "$rpc_mountpoint";
+
         fastcgi_split_path_info ^(.+\\.php)(.*)$;
         fastcgi_pass    unix:$rutorrent_sock;
         fastcgi_index   index.php;
@@ -156,7 +319,7 @@ location $rutorrent_url {
 
 location $rpc_mountpoint {
     access_log $nginx_rpc2_access_log;
-    error_log $nginx_rpc2_error_log debug;
+    error_log $nginx_rpc2_error_log info;
     include /etc/nginx/scgi_params;
     scgi_pass unix:$rtorrent_sock;
 }
@@ -177,6 +340,26 @@ pm.min_spare_servers = 1
 pm.max_spare_servers = 3
 chdir = /
 EOF
+
+cat <<EOF > $run_sh
+#!/usr/bin/env bash
+
+#if [[ "$EUID" == 0 ]]; then
+#    echo "User ID detected as 0 (i.e. 'root')."
+#    echo "Please don't run as root."
+#    echo "Exiting."
+#    exit 1
+#fi
+if [[ \`whoami\` == 'root' ]]; then
+    echo "Username detected as 'root'."
+    echo "Please don't run as root."
+    echo "Exiting."
+    exit 1
+fi
+
+rtorrent -n -o import=$rtorrent_inst_file
+EOF
+chmod g+x $run_sh
 
 ln -s /mnt/drive0/rtorrent/rutorrent/ $nginx_html_loc/$rutorrent_url || true
 
