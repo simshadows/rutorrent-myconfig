@@ -7,10 +7,10 @@ set -e
 # (This may not be portable.)
 source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-# Arguments
+# Arguments with some basic checks.
 instance_dir=$1
 if [[ -z $instance_dir ]]; then
-    echo "No argument given."
+    echo "No instance directory argument given."
     exit
 elif [[ "$instance_dir" != /* ]]; then
     echo "Argument must be an absolute path."
@@ -19,7 +19,19 @@ elif [[ ! -d $instance_dir ]]; then
     echo "Directory '$instance_dir' does not exist. Please create it and run this script again."
     exit
 fi
-echo "instance_dir is set to '$instance_dir'."
+echo "instance_dir <-- '$instance_dir'"
+instance_name=$2
+if [[ -z $instance_name ]]; then
+    echo "No instance name argument given."
+    exit
+fi
+echo "instance_name <-- '$instance_name'"
+torrent_listening_port=$3
+if [[ -z $torrent_listening_port ]]; then
+    echo "No torrent listening port argument given."
+    exit
+fi
+echo "torrent_listening_port <-- '$torrent_listening_port'"
 
 ################
 # System Setup #
@@ -35,10 +47,11 @@ gpasswd -a rtorrent rtorrent-socket
 gpasswd -a rutorrent rtorrent-socket
 
 #################################
-# Other Misc Instance Variables #
+# Other Misc Manifest Variables #
 #################################
 
-instance_name='public0'
+# THESE CAN BE EDITED AS NECESSARY.
+
 php_fpm_poold_loc='/etc/php/7.0/fpm/pool.d/'
 nginx_html_loc='/usr/share/nginx/html/'
 
@@ -94,7 +107,8 @@ nginx_rpc2_error_log="$nginx_log_dir/nginx.rutorrent.rpc2.error.log"
 # Directory Structure Setup #
 #############################
 
-mkdir -p $instance_dir
+# We assume the instance directory has already been set up.
+chmod 755 $instance_dir
 
 mkdir -p $scripts_dir
 
@@ -114,9 +128,11 @@ chown rtorrent $download_dir
 chgrp www-data $download_dir
 
 mkdir -p $watch_start_dir
+chmod 700 $watch_start_dir
 # TODO: Loosen permissions?
 
 mkdir -p $watch_normal_dir
+chmod 700 $watch_normal_dir
 # TODO: Loosen permissions?
 
 mkdir -p $rtorrent_log_dir
@@ -209,7 +225,7 @@ schedule2 = watch_start,  10, 10, ((load.start,  (cat, "$watch_start_dir",  "*.t
 schedule2 = watch_normal, 11, 10, ((load.normal, (cat, "$watch_normal_dir", "*.torrent")))
 
 # Listening port for incoming peer traffic
-network.port_range.set = 50000-50000
+network.port_range.set = $torrent_listening_port-$torrent_listening_port
 network.port_random.set = no
 
 # Tracker-less torrent and UDP tracker support
