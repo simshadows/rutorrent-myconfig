@@ -65,6 +65,8 @@ rutorrent_sock="$sockets_dir/php-fpm-rutorrent.sock"
 ## rtorrent
 
 session_dir="$instance_dir/rtorrent-session/"
+pid_file="$session_dir/rtorrent.pid"
+
 download_dir="$instance_dir/rtorrent-data/"
 watch_start_dir="$instance_dir/rtorrent-watch-start/"
 watch_normal_dir="$instance_dir/rtorrent-watch-normal/"
@@ -137,9 +139,7 @@ chown rutorrent $rutorrent_log_dir
 mkdir -p $nginx_log_dir
 chmod 755 $nginx_log_dir
 
-########################
-# Other Instance Setup #
-########################
+# TODO: Consider tightening access to the sockets. These might be useful.
 
 #function create_sock_file () {
 #    python -c "import socket as s; sock = s.socket(s.AF_UNIX); sock.bind('$1')" || true
@@ -157,35 +157,22 @@ chmod 755 $nginx_log_dir
 #chown rutorrent $rutorrent_sock
 #chgrp www-data $rutorrent_sock
 
-# This file specifies the instance base directory for rtorrent.
+###############################################################################
+#
+#  RTORRENT CONFIGURATION FILE
+# 
+#  Watch https://github.com/rakshasa/rtorrent/wiki/CONFIG-Template for possible
+#  configuration options.
+#
+###############################################################################
 cat <<EOF > $rtorrent_inst_file
-#############################################################################
-# Watch https://github.com/rakshasa/rtorrent/wiki/CONFIG-Template for possible
-# configuration options.
-#############################################################################
 
-###################
-# Instance Layout #
-###################
+# Log file manifest variables
+method.insert = cfg.logfile, private|const|string, (cat, "$rtorrent_log_dir", "rtorrent-", (system.time), ".log")
+method.insert = cfg.execlogfile, private|const|string, (cat, "$rtorrent_log_dir", "execute.log")
+method.insert = cfg.xmlrpclogfile, private|const|string, (cat, "$rtorrent_log_dir", "xmlrpc.log")
 
-method.insert = cfg.basedir, private|const|string, (cat, "$instance_dir")
-
-method.insert = cfg.sockdir,       private|const|string, (cat, (cfg.basedir), "instance-sockets/")
-method.insert = cfg.sockfile,      private|const|string, (cat, (cfg.basedir), "rtorrent.sock")
-
-method.insert = cfg.session,       private|const|string, (cat, (cfg.basedir), "rtorrent-session/")
-method.insert = cfg.download,      private|const|string, (cat, (cfg.basedir), "rtorrent-data/")
-method.insert = cfg.watch_start,   private|const|string, (cat, (cfg.basedir), "rtorrent-watch-start/")
-method.insert = cfg.watch_normal,  private|const|string, (cat, (cfg.basedir), "rtorrent-watch-normal/")
-
-method.insert = cfg.logs,          private|const|string, (cat, (cfg.basedir), "rtorrent-logs/")
-method.insert = cfg.logfile,       private|const|string, (cat, (cfg.logs), "rtorrent-", (system.time), ".log")
-method.insert = cfg.execlogfile,   private|const|string, (cat, (cfg.logs), "execute.log")
-method.insert = cfg.xmlrpclogfile, private|const|string, (cat, (cfg.logs), "xmlrpc.log")
-
-method.insert = cfg.pidfile,       private|const|string, (cat, (cfg.session), "rtorrent.pid")
-
-system.cwd.set = (cfg.basedir)
+system.cwd.set = "$instance_dir"
 system.umask.set = 0133
 
 ###########
@@ -211,15 +198,15 @@ log.xmlrpc       = (cfg.xmlrpclogfile)
 # Other Config Commands #
 #########################
 
-session.path.set      = (cfg.session)
-directory.default.set = (cfg.download)
+session.path.set      = "$session_dir"
+directory.default.set = "$download_dir"
 
 # Write PID file
-execute.nothrow       = bash, -c, (cat, "echo >", (cfg.pidfile), " ", (system.pid))
+execute.nothrow       = bash, -c, (cat, "echo >", $pid_file, " ", (system.pid))
 
 # Watch directory load scheduling ('.torrent' files are loaded in every 10 seconds.)
-schedule2 = watch_start,  10, 10, ((load.start,  (cat, (cfg.watch_start),  "*.torrent")))
-schedule2 = watch_normal, 11, 10, ((load.normal, (cat, (cfg.watch_normal), "*.torrent")))
+schedule2 = watch_start,  10, 10, ((load.start,  (cat, "$watch_start_dir",  "*.torrent")))
+schedule2 = watch_normal, 11, 10, ((load.normal, (cat, "$watch_normal_dir", "*.torrent")))
 
 # Listening port for incoming peer traffic
 network.port_range.set = 50000-50000
@@ -288,7 +275,11 @@ schedule = socket_chmod,0,0,"execute=chmod,0660,$rtorrent_sock"
 schedule = socket_chgrp,0,0,"execute=chgrp,rtorrent-socket,$rtorrent_sock"
 EOF
 
-# This file specifies the instance base directory for rtorrent.
+###############################################################################
+#
+#  NGINX INCLUDE FILE
+#
+###############################################################################
 cat <<EOF > $nginx_inst_file
 location $rutorrent_url {
     access_log $nginx_access_log;
@@ -325,6 +316,11 @@ location $rpc_mountpoint {
 }
 EOF
 
+###############################################################################
+#
+#  PHP POOL.D FILE
+#
+###############################################################################
 cat <<EOF > $php_fpm_poold_loc/rutorrent-$instance_name.conf
 [rutorrent-$instance_name]
 user = rutorrent
