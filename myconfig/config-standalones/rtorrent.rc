@@ -7,26 +7,21 @@
 # Instance Layout #
 ###################
 
-method.insert = cfg.basedir,       private|const|string, (cat, "/mnt/external_drive/rtorrent_data/")
+## basedir will be set before this script runs.
+#method.insert = cfg.basedir,      private|const|string, (cat, "PLACEHOLDER")
+
+method.insert = cfg.sockdir,       private|const|string, (cat, (cfg.basedir), "instance-sockets/")
+method.insert = cfg.sockfile,      private|const|string, (cat, (cfg.basedir), "rtorrent.sock")
 
 method.insert = cfg.session,       private|const|string, (cat, (cfg.basedir), "session/")
-method.insert = cfg.download,      private|const|string, (cat, (cfg.basedir), "torrent_data/")
-method.insert = cfg.watch_start,   private|const|string, (cat, (cfg.basedir), "watch_start/")
-method.insert = cfg.watch_normal,  private|const|string, (cat, (cfg.basedir), "watch_normal/")
+method.insert = cfg.download,      private|const|string, (cat, (cfg.basedir), "data/")
+method.insert = cfg.watch_start,   private|const|string, (cat, (cfg.basedir), "watch-start/")
+method.insert = cfg.watch_normal,  private|const|string, (cat, (cfg.basedir), "watch-normal/")
 
 method.insert = cfg.logs,          private|const|string, (cat, (cfg.basedir), "logs/")
 method.insert = cfg.logfile,       private|const|string, (cat, (cfg.logs), "rtorrent-", (system.time), ".log")
 method.insert = cfg.execlogfile,   private|const|string, (cat, (cfg.logs), "execute.log")
 method.insert = cfg.xmlrpclogfile, private|const|string, (cat, (cfg.logs), "xmlrpc.log")
-
-# rutorrent directory, made for convenience.
-# These are not intended to be touched by rtorrent.
-# NOTE: There may be more subdirectories that rutorrent requires that will not be automatically created. Check the rutorrent error logs and create them accordingly.
-# (There is currently no reliable way to make rutorrent automatically create its own directories that I can think of.)
-method.insert = cfg.web_data,      private|const|string, (cat, (cfg.basedir), "rutorrent/")
-# The 'cfg.web_logs' directory is not automatically created and will silently fail.
-# Considering how this contains the error logs of rutorrent, this is really weird.
-method.insert = cfg.web_logs,      private|const|string, (cat, (cfg.web_data), "logs/")
 
 method.insert = cfg.pidfile,       private|const|string, (cat, (cfg.session), "rtorrent.pid")
 
@@ -37,9 +32,7 @@ execute.throw = bash, -c, (cat, "mkdir -p ", \
     (cfg.download),     " ", \
     (cfg.watch_start),  " ", \
     (cfg.watch_normal), " ", \
-    (cfg.logs),         " ", \
-    (cfg.web_data),     " ", \
-    (cfg.web_logs))
+    (cfg.logs))
 
 system.cwd.set = (cfg.basedir)
 system.umask.set = 0133
@@ -140,5 +133,3 @@ method.insert = d.session_file, simple, "cat=(session.path), (d.hash), .torrent"
 # SCGI
 execute.nothrow = rm,~/socket/rtorrent.sock
 network.scgi.open_local = /home/sys-rtorrent/socket/rtorrent.sock
-schedule = socket_chmod,0,0,"execute=chmod,0660,~/socket/rtorrent.sock"
-schedule = socket_chgrp,0,0,"execute=chgrp,sys-rtorrent-socket,~/socket/rtorrent.sock"

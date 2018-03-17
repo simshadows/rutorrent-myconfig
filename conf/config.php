@@ -1,6 +1,11 @@
 <?php
 	// configuration parameters
 
+	// Get server variables related to the webapp instance
+	$cfgInstanceDir = realpath($_SERVER['CFG_INSTANCE_DIR']);
+	$cfgXMLRPCMountPoint = $_SERVER['CFG_XMLRPC_MOUNTPOINT'];
+	
+
 	// for snoopy client
 	@define('HTTP_USER_AGENT', 'Mozilla/5.0 (Windows NT 6.0; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0', true);
 	@define('HTTP_TIME_OUT', 30, true);	// in seconds
@@ -19,7 +24,7 @@
 	$schedule_rand = 10;			// rand for schedulers start, +0..X seconds
 
 	$do_diagnostic = true;
-	$log_file = '/mnt/external_drive/rtorrent_data/logs_rutorrent/errors.log';		// path to log file (comment or leave blank to disable logging)
+	$log_file = $cfgInstanceDir . '/rutorrent-logs/errors.log';		// path to log file (comment or leave blank to disable logging)
 
 	$saveUploadedTorrents = true;		// Save uploaded torrents to profile/torrents directory or not
 	$overwriteUploadedTorrents = false;     // Overwrite existing uploaded torrents in profile/torrents directory or make unique name
@@ -30,7 +35,7 @@
 	// $scgi_port = 5000;
 	// $scgi_host = "127.0.0.1";
 	$scgi_port = 0;
-	$scgi_host = "unix:///home/sys-rtorrent/socket/rtorrent.sock";
+	$scgi_host = 'unix://' . $cfgInstanceDir . "/instance-sockets/rtorrent.sock";
 
 	// For web->rtorrent link through unix domain socket 
 	// (scgi_local in rtorrent conf file), change variables 
@@ -39,7 +44,9 @@
 	// $scgi_port = 0;
 	// $scgi_host = "unix:///tmp/rpc.socket";
 
-	$XMLRPCMountPoint = "/RPC2";		// DO NOT DELETE THIS LINE!!! DO NOT COMMENT THIS LINE!!!
+	// $XMLRPCMountPoint = "/RPC2";		// DO NOT DELETE THIS LINE!!! DO NOT COMMENT THIS LINE!!!
+	// lol soz imma gonna comment this line and substitute my own >:D
+	$XMLRPCMountPoint = $cfgXMLRPCMountPoint;
 
 	$pathToExternals = array(
 		"php" 	=> '',			// Something like /usr/bin/php. If empty, will be found in PATH.
@@ -55,13 +62,13 @@
 	);
 
     // Path to user profiles
-    $profilePath = '/usr/share/webapps/rutorrent/app_data/';
+    $profilePath = $cfgInstanceDir . '/rutorrent-webappdata';
     // Mask for files and directory creation in user profiles.
     // Both Webserver and rtorrent users must have read-write access to it.
     // For example, if Webserver and rtorrent users are in the same group then the value may be 0770.
-    $profileMask = 0777;
+    $profileMask = 0775;
 
-    $tempDirectory = '/usr/share/webapps/rutorrent/app_data/tmp/';
+    $tempDirectory = $profilePath . '/tmp/';
     // Temp directory. Absolute path with trail slash. If null, then autodetect will be used.
 
 	$canUseXSendFile = false;		// If true then use X-Sendfile feature if it exist
