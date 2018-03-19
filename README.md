@@ -1,16 +1,27 @@
-# simshadows/custom\_rutorrent
+# simshadows/rutorrent-myconfig
 
-This repository is a copy of the original [rutorrent repository](https://github.com/Novik/ruTorrent), with my custom configuration changes.
+This repository is a copy of the [original rutorrent repository](https://github.com/Novik/ruTorrent), with my custom configuration changes.
 
-## Notes-to-self on repo maintenance
+I only merge in official releases, or fixes.
 
-It is recommended to have a remote to upstream in order to update rutorrent:
+## Changes compared to upstream
 
-```
-git remote add upstream https://github.com/Novik/ruTorrent
-```
+Most of my files are contained in `/myconfig/`.
 
-I only merge to official releases.
+Some other important changes are:
+
+- `/conf/config.php`
+- Plugins are removed/added as needed from `/plugins/`.
+	- Removed plugins are kept in `/myconfig/removed-plugins/`.
+
+## TODO
+
+Things I want done:
+
+- Isolate all my custom files to `/myconfig/` somehow.
+	- This reduces the pain of reconciling merge conflicts.
+- Improve the usability of the basic scripts
+	- Particularly solve the challenges of user checking and privilege escalation.
 
 # ruTorrent
 

@@ -37,9 +37,9 @@ echo "torrent_listening_port <-- '$torrent_listening_port'"
 # System Setup #
 ################
 
-useradd -rm www-data || true
-useradd -rm rtorrent || true
-useradd -rm rutorrent || true
+useradd -r www-data || true
+useradd -r rtorrent || true
+useradd -r rutorrent || true
 groupadd rtorrent-socket || true
 
 gpasswd -a www-data rtorrent-socket
@@ -123,17 +123,19 @@ chmod 700 $session_dir
 chown rtorrent $session_dir
 
 mkdir -p $download_dir
-chmod 775 $download_dir
+chmod 6775 $download_dir
 chown rtorrent $download_dir
 chgrp www-data $download_dir
 
 mkdir -p $watch_start_dir
-chmod 700 $watch_start_dir
-# TODO: Loosen permissions?
+chmod 6700 $watch_start_dir
+chown rtorrent $watch_start_dir
+chgrp www-data $watch_start_dir
 
 mkdir -p $watch_normal_dir
-chmod 700 $watch_normal_dir
-# TODO: Loosen permissions?
+chmod 6700 $watch_normal_dir
+chown rtorrent $watch_normal_dir
+chgrp www-data $watch_normal_dir
 
 mkdir -p $rtorrent_log_dir
 chmod 755 $rtorrent_log_dir
@@ -189,7 +191,7 @@ method.insert = cfg.execlogfile, private|const|string, (cat, "$rtorrent_log_dir"
 method.insert = cfg.xmlrpclogfile, private|const|string, (cat, "$rtorrent_log_dir", "xmlrpc.log")
 
 system.cwd.set = "$instance_dir"
-system.umask.set = 0133
+system.umask.set = 0033
 
 ###########
 # Logging #
@@ -237,14 +239,18 @@ trackers.use_udp.set = no
 # Peer settings
 # TODO: These settings are small, which is more suitable for testing my raspberry pi.
 #       Make them bigger when I get better hardware!
-throttle.max_uploads.set        = 60
-throttle.max_uploads.global.set = 60
+throttle.max_uploads.global.set   = 40
+throttle.max_downloads.global.set = 40
 
-throttle.min_peers.normal.set   = 1
-throttle.max_peers.normal.set   = 60
-throttle.min_peers.seed.set     = 1
-throttle.max_peers.seed.set     = 60
-trackers.numwant.set            = 20
+throttle.max_uploads.set   = 20
+throttle.max_downloads.set = 20
+
+throttle.min_peers.normal.set = 19
+throttle.max_peers.normal.set = 20
+throttle.min_peers.seed.set   = 19
+throttle.max_peers.seed.set   = 20
+
+trackers.numwant.set = 20
 
 protocol.encryption.set = allow_incoming,try_outgoing,enable_retry
 
