@@ -7,28 +7,48 @@ set -e
 # (This may not be portable.)
 source_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+print_usage() {
+    echo ""
+    echo "Usage:"
+    echo "./setup-instance.sh <instance_directory> <instance_name> <bittorrent_port>"
+    echo ""
+    echo "Example:"
+    echo "./setup-instance.sh /mnt/drive11/rtorrent/instance-public0 public0 50000"
+    echo ""
+}
+
 # Arguments with some basic checks.
 instance_dir=$1
 if [[ -z $instance_dir ]]; then
+    echo ""
     echo "No instance directory argument given."
+    print_usage
     exit
 elif [[ "$instance_dir" != /* ]]; then
+    echo ""
     echo "Argument must be an absolute path."
+    print_usage
     exit
 elif [[ ! -d $instance_dir ]]; then
+    echo ""
     echo "Directory '$instance_dir' does not exist. Please create it and run this script again."
+    print_usage
     exit
 fi
 echo "instance_dir <-- '$instance_dir'"
 instance_name=$2
 if [[ -z $instance_name ]]; then
+    echo ""
     echo "No instance name argument given."
+    print_usage
     exit
 fi
 echo "instance_name <-- '$instance_name'"
 torrent_listening_port=$3
 if [[ -z $torrent_listening_port ]]; then
+    echo ""
     echo "No torrent listening port argument given."
+    print_usage
     exit
 fi
 echo "torrent_listening_port <-- '$torrent_listening_port'"
@@ -52,7 +72,7 @@ gpasswd -a rutorrent rtorrent-socket
 
 # THESE CAN BE EDITED AS NECESSARY.
 
-php_fpm_poold_loc='/etc/php/7.0/fpm/pool.d/'
+php_fpm_poold_loc='/etc/php/7.3/fpm/pool.d/'
 nginx_html_loc='/usr/share/nginx/html/'
 
 rpc_mountpoint="/RPC2-$instance_name"
@@ -117,6 +137,8 @@ mkdir -p $config_dir
 mkdir -p $sockets_dir
 chmod 770 $sockets_dir
 chgrp rtorrent-socket $sockets_dir
+# clear out sockets directory
+rm $sockets_dir/*
 
 mkdir -p $session_dir
 chmod 700 $session_dir
@@ -265,7 +287,7 @@ network.max_open_sockets.set = 300
 # Memory resource usage (increase if you have a large number of items loaded,
 # and/or the available resources to spend)
 # TODO: Further optimize later.
-pieces.memory.max.set = 300M
+pieces.memory.max.set = 1024M
 network.xmlrpc.size_limit.set = 4M
 
 # Other operational settings
@@ -406,8 +428,8 @@ include $nginx_inst_file;
 
 3) After doing the above steps (in any order), restart/enable nginx and php-fpm as needed:
 ---
-systemctl enable nginx php-fpm
-systemctl restart nginx php-fpm
+systemctl enable nginx php7.3-fpm
+systemctl restart nginx php7.3-fpm
 ---
 (Service names may differ. Check 'systemctl list-unit-files' if necessary.)
 EOF
