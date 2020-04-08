@@ -14,6 +14,24 @@ Some other important changes are:
 - Plugins are removed/added as needed from `/plugins/`.
 	- Removed plugins are kept in `/myconfig/removed-plugins/`.
 
+## Absolute Filepaths
+
+I'm currently using absolute filepaths, but I'll be looking into using relative filepaths instead.
+
+If an instance folder must be moved to a different location, you'll need to run my instance migration script `migrate-instance.py`, and run `setup-instance.sh` again:
+
+```
+# chown -R simshadows INSTANCEDIR
+# sudo -u simshadows bash
+$ ./migrate-instance.py INSTANCEDIR OLDINSTANCEDIR
+$ exit
+# ./setup-instance.sh INSTANCEDIR INSTANCENAME PORT
+```
+
+Do note that I ran `migrate-instance.py` in a safer non-root user. I just prefer to do it this way if I'm using dependencies that I don't necessarily trust. In this case, I'm using a bencode library.
+
+Once you're done running `migrate-instance.py`, the `setup-instance.sh` will redo all file permissions.
+
 ## TODO
 
 Things I want done:

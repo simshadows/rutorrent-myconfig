@@ -138,30 +138,40 @@ mkdir -p $sockets_dir
 chmod 770 $sockets_dir
 chgrp rtorrent-socket $sockets_dir
 # clear out sockets directory
-rm $sockets_dir/*
+rm $sockets_dir/* || true
 
 mkdir -p $session_dir
 chmod 700 $session_dir
-chown rtorrent $session_dir
+chmod -R 744 $session_dir/* || true
+chown -R rtorrent $session_dir
+chgrp -R rtorrent $session_dir
 
 mkdir -p $download_dir
 chmod 6775 $download_dir
-chown rtorrent $download_dir
-chgrp www-data $download_dir
+chown -R rtorrent $download_dir
+chgrp -R www-data $download_dir
+chmod 775 $download_dir
+#chmod -R 644 $download_dir/* || true
+chmod -R 775 $download_dir/* || true
 
 mkdir -p $watch_start_dir
 chmod 6700 $watch_start_dir
 chown rtorrent $watch_start_dir
 chgrp www-data $watch_start_dir
+# TODO: Any ID/permission changes?
 
 mkdir -p $watch_normal_dir
 chmod 6700 $watch_normal_dir
 chown rtorrent $watch_normal_dir
 chgrp www-data $watch_normal_dir
+# TODO: Any ID/permission changes?
 
 mkdir -p $rtorrent_log_dir
 chmod 755 $rtorrent_log_dir
 chown rtorrent $rtorrent_log_dir
+# Fix further permissions
+chown -R rtorrent $rtorrent_log_dir # (yes, this is redundant, I know.)
+chgrp rtorrent $rtorrent_log_dir/* || true
 
 mkdir -p $rutorrent_data_dir \
     $rutorrent_settings_dir \
@@ -171,10 +181,12 @@ mkdir -p $rutorrent_data_dir \
 chmod -R 6770 $rutorrent_data_dir
 chown -R rutorrent $rutorrent_data_dir
 chgrp -R rtorrent $rutorrent_data_dir
+# Permissions are already fixed with -R.
 
 mkdir -p $rutorrent_log_dir
 chmod 755 $rutorrent_log_dir
 chown rutorrent $rutorrent_log_dir
+# TODO: Any ID/permission changes?
 
 mkdir -p $nginx_log_dir
 chmod 755 $nginx_log_dir
@@ -399,6 +411,7 @@ fi
 
 rtorrent -n -o import=$rtorrent_inst_file
 EOF
+chgrp rtorrent $run_sh
 chmod g+x $run_sh
 
 ln -s /mnt/drive0/rtorrent/rutorrent/ $nginx_html_loc/$rutorrent_url || true
