@@ -5,7 +5,7 @@
 
 var theWebUI = 
 {
-        version: "3.8",
+        version: "3.9",
 	tables:
 	{
 		trt: 
@@ -24,10 +24,10 @@ var theWebUI =
 				{ text: theUILang.UL, 			width: "60px", 	id: "ul",		type: TYPE_NUMBER },
 				{ text: theUILang.ETA, 			width: "60px", 	id: "eta",		type: TYPE_NUMBER },
 				{ text: theUILang.Label, 		width: "60px", 	id: "label",		type: TYPE_STRING },
-				{ text: theUILang.Peers, 		width: "60px", 	id: "peers",		type: TYPE_NUMBER },
-				{ text: theUILang.Seeds, 		width: "60px", 	id: "seeds",		type: TYPE_NUMBER },
+				{ text: theUILang.Peers, 		width: "60px", 	id: "peers",		type: TYPE_PEERS },
+				{ text: theUILang.Seeds, 		width: "60px", 	id: "seeds",		type: TYPE_SEEDS },
 				{ text: theUILang.Priority, 		width: "80px", 	id: "priority",		type: TYPE_NUMBER },
-				{ text: theUILang.Created_on,		width: "100px", id: "created",		type: TYPE_NUMBER },
+				{ text: theUILang.Created_on,		width: "110px", id: "created",		type: TYPE_NUMBER },
 				{ text: theUILang.Remaining, 		width: "90px", 	id: "remaining",	type: TYPE_NUMBER },
 				{ text: theUILang.Save_path,		width: "200px", id: "save_path",	type: TYPE_STRING }
 			],
@@ -109,7 +109,7 @@ var theWebUI =
 			ondblclick:	function(obj) 
 			{ 
 				if(obj.id && theWebUI.peers[obj.id])
-					window.open(theURLs.RIPEURL + theWebUI.peers[obj.id].ip, "_blank");
+					window.open(theURLs.RIPEURL + theWebUI.peers[obj.id].ip.replace(/^\[?(.+?)\]?$/, '$1'), "_blank");
 				return(false);
 			}
 		},
@@ -308,7 +308,7 @@ var theWebUI =
 
 	getPlugins: function()
 	{
-		this.request("?action=getplugins", [this.getUISettings, this]);
+		this.requestWithoutTimeout("?action=getplugins", [this.getUISettings, this]);
 	},
 
 	getUISettings: function()
@@ -325,7 +325,7 @@ var theWebUI =
 		correctContent();
 		this.updateServerTime();
 		window.setInterval( this.updateServerTime, 1000 );
-		this.request("?action=getuisettings", [this.initFinish, this]);
+		this.requestWithoutTimeout("?action=getuisettings", [this.initFinish, this]);
 	},
 
 	initFinish: function(data)
@@ -801,7 +801,7 @@ var theWebUI =
 			if((/^webui\./).test(i))
 				cookie[i] = v;
 		});
-		theWebUI.request("?action=setuisettings&v=" + json_encode(cookie),reply);
+		theWebUI.request("?action=setuisettings&v=" + JSON.stringify(cookie),reply);
 	},
 
 //
@@ -1341,12 +1341,23 @@ var theWebUI =
       		}
    	},
 
+        trtDeselect: function() 
+	{
+		var table = this.getTable("trt");
+		var sr = table.rowSel;
+		for(var k in sr)
+			sr[k] = false;
+		table.refreshRows();
+	},
+
    	createMenu: function(e, id) 
 	{
    		var table = this.getTable("trt");
    		theContextMenu.clear();
    		if(table.selCount > 1) 
    		{
+			theContextMenu.add([CMENU_SEL, "> " + table.selCount + " torrents", "theWebUI.trtDeselect()"]);
+			theContextMenu.add([CMENU_SEP]);
       			theContextMenu.add([theUILang.Start, "theWebUI.start()"]);
       			theContextMenu.add([theUILang.Pause, "theWebUI.pause()"]);
       			theContextMenu.add([theUILang.Stop, "theWebUI.stop()"]);
@@ -1355,6 +1366,8 @@ var theWebUI =
    		}
    		else 
    		{
+			theContextMenu.add([CMENU_SEL, "> 1 torrent", "theWebUI.trtDeselect()"]);
+			theContextMenu.add([CMENU_SEP]);
    			theContextMenu.add([theUILang.Start, this.isTorrentCommandEnabled("start",id) ? "theWebUI.start()" : null]);
    			theContextMenu.add([theUILang.Pause, (this.isTorrentCommandEnabled("pause",id) || this.isTorrentCommandEnabled("unpause",id)) ? "theWebUI.pause()" : null]);
    			theContextMenu.add([theUILang.Stop, this.isTorrentCommandEnabled("stop",id) ? "theWebUI.stop()" : null]);
@@ -1371,17 +1384,16 @@ var theWebUI =
 			theContextMenu.add([theUILang.updateTracker, this.isTorrentCommandEnabled("updateTracker",id) ? "theWebUI.updateTracker()" : null]);
    		theContextMenu.add([CMENU_SEP]);
    		var _bf = [];
-   		for(var lbl in this.cLabels) 
+		_bf.push([theUILang.New_label, (table.selCount > 1) || this.isTorrentCommandEnabled("setlabel",id) ? "theWebUI.newLabel()" : null]);
+   		_bf.push([theUILang.Remove_label, (table.selCount > 1) || this.isTorrentCommandEnabled("setlabel",id) ? "theWebUI.removeLabel()" : null]);
+   		_bf.push([CMENU_SEP]);
+		for(var lbl in this.cLabels) 
    		{
       			if((table.selCount == 1) && (this.torrents[id].label == lbl))
          			_bf.push([CMENU_SEL, lbl+" "]);
       			else 
          			_bf.push([lbl+" ", (table.selCount > 1) || this.isTorrentCommandEnabled("setlabel",id) ? "theWebUI.setLabel('" + addslashes(lbl) + "')" : null]);
       		}
-      		if(_bf.length>0)
-	   		_bf.push([CMENU_SEP]);
-   		_bf.push([theUILang.New_label, (table.selCount > 1) || this.isTorrentCommandEnabled("setlabel",id) ? "theWebUI.newLabel()" : null]);
-   		_bf.push([theUILang.Remove_label, (table.selCount > 1) || this.isTorrentCommandEnabled("setlabel",id) ? "theWebUI.removeLabel()" : null]);
    		theContextMenu.add([CMENU_CHILD, theUILang.Labels, _bf]);
    		theContextMenu.add([CMENU_SEP]);
    		var _c0 = [];
@@ -1552,7 +1564,7 @@ var theWebUI =
 			{	 
 				theWebUI.systemInfo.rTorrent.started = false;
 	   			theWebUI.error(status,text); 
-				if(theWebUI.settings["webui.retry_on_error"]!=0)
+				if(theWebUI.settings["webui.retry_on_error"])
 					theWebUI.setInterval( iv(theWebUI.settings["webui.retry_on_error"])*1000 );
 		   	});
    	},
@@ -1587,7 +1599,11 @@ var theWebUI =
 	 */
 	addTorrents: function(data)
 	{
-		theWebUI.systemInfo.rTorrent.started = true;
+		if(!theWebUI.systemInfo.rTorrent.started)
+		{
+			noty(theUILang.linkTorTorrentRestored,'success');
+			theWebUI.systemInfo.rTorrent.started = true;			
+		}
    		var table = this.getTable("trt");
    		var tul = 0;
 		var tdl = 0;
@@ -1652,6 +1668,9 @@ var theWebUI =
 			if(!torrent._updated)
 			{
         			delete theWebUI.torrents[hash];
+        			delete theWebUI.files[hash];
+        			delete theWebUI.dirs[hash];
+        			delete theWebUI.peers[hash];
 				if(theWebUI.labels[hash].indexOf("-_-_-nlb-_-_-") >- 1) 
 					theWebUI.labels["-_-_-nlb-_-_-"]--;
 	        	 	if(theWebUI.labels[hash].indexOf("-_-_-com-_-_-") >- 1) 
@@ -1818,13 +1837,19 @@ var theWebUI =
 			this.tegs[id].cnt = 0;
 	},
 
+	matchTeg: function(teg, name)
+	{
+		var pattern = teg.val.replace(/[-[\]{}()+?.,\\^$|#\s]/g, '\\$&');
+		return new RegExp(pattern.replace('*', '.+'), 'i').test(name);
+	},
+
 	updateTeg: function(id)
 	{
 		var teg = this.tegs[id];
-		var str = teg.val.toLowerCase();
+		var self = this;
 		$.each(this.torrents,function(hash,torrent)
 		{
-			if(torrent.name.toLowerCase().indexOf(str) >- 1)
+			if(self.matchTeg(teg, torrent.name))
 				teg.cnt++;
 		});
 		var counter = $("#"+id+"-c");
@@ -1840,11 +1865,10 @@ var theWebUI =
 	 */
 	updateTegs: function(torrent)
 	{
-	        var str = torrent.name.toLowerCase();
 		for( var id in this.tegs )
 		{
-		        var teg = this.tegs[id];
-			if(str.indexOf(teg.val.toLowerCase()) >- 1)
+			var teg = this.tegs[id];
+			if(this.matchTeg(teg, torrent.name))
 				teg.cnt++;
 		}
 	},
@@ -1854,6 +1878,15 @@ var theWebUI =
 		delete this.tegs[id];
 		$($$(id)).remove();
 		this.actLbl = "";
+		this.switchLabel($$("-_-_-all-_-_-"));
+	},
+
+	removeAllTegs: function()
+	{
+		for (var id in this.tegs) {
+			delete this.tegs[id];
+			$($$(id)).remove();
+		}
 		this.switchLabel($$("-_-_-all-_-_-"));
 	},
 
@@ -1874,6 +1907,7 @@ var theWebUI =
 			else
 				theContextMenu.clear();
 			theContextMenu.add([theUILang.removeTeg, "theWebUI.removeTeg('"+e.target.id+"');"]);
+			theContextMenu.add([theUILang.removeAllTegs, "theWebUI.removeAllTegs();"]);
 			theContextMenu.show(e.clientX,e.clientY);
 		}
 		else
@@ -2118,18 +2152,17 @@ var theWebUI =
 	        var table = this.getTable("trt");
 	        if($($$(this.actLbl)).hasClass("teg"))
 	        {
-	                var teg = this.tegs[this.actLbl];
-	                if(teg)
-	                {
-	        		if(table.getValueById(sId, "name").toLowerCase().indexOf(teg.val.toLowerCase()) >- 1)
-					table.unhideRow(sId);
-				else 
-					table.hideRow(sId);
-			}
+				var teg = this.tegs[this.actLbl];
+				if(teg)
+				{
+	        		if(this.matchTeg(teg, table.getValueById(sId, "name")))
+						table.unhideRow(sId);
+					else 
+						table.hideRow(sId);
+				}
 	        }
-	        else
-			if(table.getAttr(sId, "label").indexOf(this.actLbl) >- 1)
-				table.unhideRow(sId);
+	        else if(table.getAttr(sId, "label").indexOf(this.actLbl) >- 1)
+					table.unhideRow(sId);
 			else 
 				table.hideRow(sId);
 	},
@@ -2247,9 +2280,9 @@ var theWebUI =
 			$("#pe").text(d.peers_actual + " " + theUILang.of + " " + d.peers_all + " " + theUILang.connected);
 			$("#et").text(theConverter.time(Math.floor((new Date().getTime()-theWebUI.deltaTime)/1000-iv(d.state_changed)),true));
 			$("#wa").text(theConverter.bytes(d.skip_total,2));
-	        	$("#bf").text(d.save_path);
+	        	$("#bf").text(d.base_path);
 	        	$("#co").text(theConverter.date(iv(d.created)+theWebUI.deltaTime/1000));
-			$("#tu").text(	$type(this.trackers[this.dID]) && $type(this.trackers[this.dID][d.tracker_focus]) ? this.trackers[this.dID][d.tracker_focus].name : '');
+			$("#tu").text($type(this.trackers[this.dID]) && $type(this.trackers[this.dID][d.tracker_focus]) ? this.trackers[this.dID][d.tracker_focus].name : '');
 	        	$("#hs").text(this.dID.substring(0,40));
 			$("#ts").text(d.msg);
 			var url = $.trim(d.comment);
@@ -2301,10 +2334,10 @@ var theWebUI =
 		if(document.title!=newTitle)
 			document.title = newTitle;
 	        $("#stup_speed").text(ul);
-	        $("#stup_limit").text((self.total.rateUL>0 && self.total.rateUL<1000*1024*1024) ? theConverter.speed(self.total.rateUL) : theUILang.no);
+	        $("#stup_limit").text((self.total.rateUL>0 && self.total.rateUL<327625*1024) ? theConverter.speed(self.total.rateUL) : theUILang.no);
 	        $("#stup_total").text(theConverter.bytes(self.total.UL));
 	        $("#stdown_speed").text(dl);
-	        $("#stdown_limit").text((self.total.rateDL>0 && self.total.rateDL<1000*1024*1024) ? theConverter.speed(self.total.rateDL) : theUILang.no);
+	        $("#stdown_limit").text((self.total.rateDL>0 && self.total.rateDL<327625*1024) ? theConverter.speed(self.total.rateDL) : theUILang.no);
 	        $("#stdown_total").text(theConverter.bytes(self.total.DL));
 	},
 
@@ -2324,10 +2357,10 @@ var theWebUI =
 	        {
 	                theContextMenu.clear();
 	                var speeds=theWebUI.settings["webui.speedlistdl"].split(",");
-	                if(theWebUI.total.rateDL<=0 || theWebUI.total.rateDL>=100*1024*1024)
-	                	theContextMenu.add([CMENU_SEL,theUILang.unlimited,"theWebUI.setDLRate(100*1024*1024)"]);
+	                if(theWebUI.total.rateDL<=0 || theWebUI.total.rateDL>=327625*1024)
+	                	theContextMenu.add([CMENU_SEL,theUILang.unlimited,"theWebUI.setDLRate(327625*1024)"]);
 			else	                
-		                theContextMenu.add([theUILang.unlimited,"theWebUI.setDLRate(100*1024*1024)"]);
+		                theContextMenu.add([theUILang.unlimited,"theWebUI.setDLRate(327625*1024)"]);
 			theContextMenu.add([CMENU_SEP]);
 	                for(var i=0; i<speeds.length; i++)
 	                {
@@ -2348,10 +2381,10 @@ var theWebUI =
 	        {
 	                theContextMenu.clear();
 	                var speeds=theWebUI.settings["webui.speedlistul"].split(",");
-	                if(theWebUI.total.rateUL<=0 || theWebUI.total.rateUL>=100*1024*1024)
-	                	theContextMenu.add([CMENU_SEL,theUILang.unlimited,"theWebUI.setULRate(100*1024*1024)"]);
+	                if(theWebUI.total.rateUL<=0 || theWebUI.total.rateUL>=327625*1024)
+	                	theContextMenu.add([CMENU_SEL,theUILang.unlimited,"theWebUI.setULRate(327625*1024)"]);
 			else	                
-		                theContextMenu.add([theUILang.unlimited,"theWebUI.setULRate(100*1024*1024)"]);
+		                theContextMenu.add([theUILang.unlimited,"theWebUI.setULRate(327625*1024)"]);
 			theContextMenu.add([CMENU_SEP]);
 	                for(var i=0; i<speeds.length; i++)
 	                {
@@ -2394,7 +2427,7 @@ var theWebUI =
 		if(h!==null)
         	{
 			$("#tdetails").height( h );
-			h-=($("#tabbar").height());
+			h-=($("#tabbar").outerHeight());
 			$("#tdcont").height( h );
 			h-=2;
         	}

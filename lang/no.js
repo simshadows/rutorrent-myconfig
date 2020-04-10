@@ -2,6 +2,7 @@
  * Norwegian language file.
  *
  * Author: xerc (iamxerc@gmail.com)
+ * Updated by: nirosa (nirosax@gmail.com)
  */
 
 var theUILang =
@@ -158,7 +159,7 @@ var theUILang =
  GetTrackerMessage		: "Motta meldinger fra tracker",
  Help				: "Hjelp",
  Speed				: "Hastighet",
- Dont_add_tname 		: "Ikke legg til torrentnavn til filbane", 
+ Dont_add_tname 		: "Ikke legg til torrentnavn til filbane",
  Free_Disk_Space		: "Ledig diskplass",
  badXMLRPCVersion		: "rTorrent er kompilert med feil versjon av xmlrpc-c biblotek, uten i8 støtte. Noe funksjonalitet vil ikke være tilgjengelig.",
  badLinkTorTorrent		: "Ingen tilkobling til rTorrent. Sjekk at den virkelig kjører. Sjekk $scgi_port og $scgi_host innstillinger i config.php og scgi_port i rTorrent sin konfigurasjonfil.",
@@ -267,11 +268,13 @@ var theUILang =
  showSpeedInTitle		: "Vis hastighet i tittelen",
  badTempPath			: "Webserver-bruker har ikke lese/skrive/kjøre tilgang til tmp mappen. ruTorrent vil ikke fungere.",
  badTempPath2			: "rTorrent-bruker har ikke lese/kjøre tilgang til tmp mappen. ruTorrent vil ikke fungere.",
- doRandomizeHash		: "Randomize info hashes for cross-seeding",
- Recreate_files 		: "Queue files recreation",
- Address			: "Address",
- PeerDL 			: "Peer DL",
- PeerDownloaded 		: "Peer Downloaded",
- Save_path			: "Save path",
- registerMagnet			: "Try to register magnet protocol handler at start"
+ doRandomizeHash		: "Tilfeldiggjør info-hasher for cross-seeding",
+ Recreate_files 		: "Lag filer på nytt",
+ Address			: "Adresse",
+ PeerDL 			: "Peer Nedl.",
+ PeerDownloaded 		: "Peer Nedlastet",
+ Save_path			: "Lagringsmappe",
+ registerMagnet			: "Prøv å registrere magnetprotokoll-håndterer på oppstart",
+ linkTorTorrentRestored		: "Connection to rTorrent established.",
+ removeAllTegs			: "Remove all tags"
 };
