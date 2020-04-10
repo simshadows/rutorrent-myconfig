@@ -15,6 +15,7 @@ tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive0/rtorrent/instance-red0
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive0/rtorrent/instance-red0b/instance-scripts/run.sh
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive0/rtorrent/instance-red1/instance-scripts/run.sh
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive3/rtorrent/instance-red2/instance-scripts/run.sh
+tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive1/rtorrent/instance-red3/instance-scripts/run.sh
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive25/rtorrent/instance-nw0/instance-scripts/run.sh
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive25/rtorrent/instance-nw1/instance-scripts/run.sh
 tmux neww -t 'rtorrent' sudo -u rtorrent bash /mnt/drive3/rtorrent/instance-jpopsuki0/instance-scripts/run.sh
