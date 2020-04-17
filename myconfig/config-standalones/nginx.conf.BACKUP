@@ -68,7 +68,15 @@ http {
 	listen       80;
         server_name  localhost;
         root         /usr/share/nginx/html/;
-	include /mnt/drive0/rtorrent/instance-public0//instance-config//nginx-instance-config;
+	include /mnt/drive11/rtorrent/instance-public0/instance-config/nginx-instance-config;
+	include /mnt/drive0/rtorrent/instance-red0/instance-config/nginx-instance-config;
+	include /mnt/drive0/rtorrent/instance-red0b/instance-config/nginx-instance-config;
+	include /mnt/drive0/rtorrent/instance-red1/instance-config/nginx-instance-config;
+	include /mnt/drive3/rtorrent/instance-red2/instance-config/nginx-instance-config;
+	include /mnt/drive1/rtorrent/instance-red3/instance-config/nginx-instance-config;
+	include /mnt/drive25/rtorrent/instance-nw0/instance-config/nginx-instance-config;
+	include /mnt/drive25/rtorrent/instance-nw1/instance-config/nginx-instance-config;
+	include /mnt/drive3/rtorrent/instance-jpopsuki0/instance-config/nginx-instance-config;
 	}
 }
 

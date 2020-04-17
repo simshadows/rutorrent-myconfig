@@ -1,0 +1,62 @@
+# smb.conf
+#
+# NOTE: Whenever you modify this file you should run the command
+# "testparm" to check that you have not made any basic syntactic 
+# errors. 
+
+[global]
+   workgroup = WORKGROUP
+
+   # The specific set of interfaces / networks to bind to
+   # This can be either the interface name or an IP address/netmask;
+   # interface names are normally preferred
+   ;   interfaces = 127.0.0.0/8 eth0
+   
+   # Only bind to the named interfaces and/or networks; you must use the
+   # 'interfaces' option above to use this.
+   # It is recommended that you enable this feature if your Samba machine is
+   # not protected by a firewall or is a firewall itself.  However, this
+   # option cannot handle dynamic or non-broadcast interfaces correctly.
+   ;   bind interfaces only = yes
+
+   # Separate log file for each machine that connects
+   log file = /var/log/samba/log.%m
+
+   # Cap the size of the individual log files (in KiB).
+   max log size = 1000
+
+   # We want Samba to only log to /var/log/samba/log.{smbd,nmbd}.
+   # Append syslog@1 if you want important messages to be sent to syslog too.
+   logging = file
+
+   # Do something sensible when Samba crashes: mail the admin a backtrace
+   panic action = /usr/share/samba/panic-action %d
+   
+   # Server role. Defines in which mode Samba will operate. Possible
+   # values are "standalone server", "member server", "classic primary
+   # domain controller", "classic backup domain controller", "active
+   # directory domain controller". 
+   #
+   # Most people will want "standalone server" or "member server".
+   # Running as "active directory domain controller" will require first
+   # running "samba-tool domain provision" to wipe databases and create a
+   # new domain.
+   server role = standalone server
+
+   obey pam restrictions = yes
+
+   # This option controls how unsuccessful authentication attempts are mapped
+   # to anonymous connections
+   map to guest = bad user
+
+   # Allows the server to follow symlinks outside of the share path.
+   # Usually insecure unless you know exactly what you are doing.
+   allow insecure wide links = yes
+
+# This read-only share will be the only available share.
+[simshadows-restricted]
+   path = /home/simshadows-restricted
+   read only = yes
+   follow symlinks = yes
+   wide links = yes
+

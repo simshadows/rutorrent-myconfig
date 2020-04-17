@@ -150,7 +150,7 @@ mkdir -p $download_dir
 chmod 6775 $download_dir
 chown -R rtorrent $download_dir
 chgrp -R www-data $download_dir
-chmod 775 $download_dir
+#chmod 775 $download_dir
 #chmod -R 644 $download_dir/* || true
 chmod -R 775 $download_dir/* || true
 
